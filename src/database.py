@@ -3,7 +3,10 @@ import json
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-DB_FILE = "news.db"
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_FILE = os.path.join(BASE_DIR, "data", "news.db")
 
 class DatabaseManager:
     def __init__(self, db_file: str = DB_FILE):

@@ -1,6 +1,11 @@
 import unittest
 import os
+import sys
 import sqlite3
+
+# Add src directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+
 from database import DatabaseManager
 
 TEST_DB = "test_news.db"

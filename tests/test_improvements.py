@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+import unittest
+import os
+import sys
+import json
+
+# Add src directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+
 """
 测试文本分块和进度跟踪功能
 """

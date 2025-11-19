@@ -7,6 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
+import sys
+
+# Add src directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+
 from datetime import datetime
 from translator import translate_article
 from database import DatabaseManager

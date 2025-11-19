@@ -6,6 +6,11 @@
 import asyncio
 import json
 import os
+import sys
+
+# Add src directory to Python path
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
+
 from datetime import datetime
 from progress_tracker import TranslationProgress, TranslationStatus
 from translator import split_text_into_chunks
