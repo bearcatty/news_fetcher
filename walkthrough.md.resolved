@@ -1,0 +1,45 @@
+# Space News Scraper Walkthrough
+
+I have successfully implemented a Python-based scraper that fetches the latest news from space.com, extracts key details, saves them to a CSV file, and includes a scheduling mechanism.
+
+## Features
+- **Scraping**: Fetches news from `space.com/news`.
+- **Extraction**: Captures Title, Author, Date, Synopsis, and URL.
+- **Storage**: Appends new articles to [space_news.csv](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/space_news.csv), avoiding duplicates.
+- **Scheduling**: Can be configured to run daily (default set to 09:00 AM).
+
+## Files
+- [scraper.py](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/scraper.py): The main script.
+- [requirements.txt](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/requirements.txt): Dependencies.
+- [space_news.csv](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/space_news.csv): Output file (generated after running).
+
+## How to Run
+
+1.  **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+2.  **Run the Scraper**:
+    ```bash
+    python scraper.py
+    ```
+    The script will run immediately once to fetch the latest news, and then enter a loop to run daily at 09:00 AM. Press `Ctrl+C` to stop the scheduler.
+
+## Verification Results
+
+I ran the scraper and it successfully generated [space_news.csv](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/space_news.csv).
+
+### Sample Output ([space_news.csv](file:///Users/bytedance/.gemini/antigravity/brain/a4525af3-cd4e-4070-8bc9-0d0174c8a02d/space_news.csv))
+```csv
+title,author,published_date,synopsis,url,fetched_at
+SpaceX Falcon 9 rocket streaks into Florida's night sky...,Mike Wall,2025-11-19T01:42:03Z,SpaceX launched another batch...,https://www.space.com/...,2025-11-19T11:22:19...
+The Euclid space telescope observed 1.2 million galaxies...,Robert Lea,2025-11-18T23:00:00Z,The data is starting to reveal...,https://www.space.com/...,2025-11-19T11:22:19...
+...
+```
+
+The scraper correctly handles:
+- **Titles**: Extracted cleanly.
+- **Authors**: "By" prefix removed.
+- **Dates**: Extracted from `datetime` attribute.
+- **Duplicates**: Checks existing URLs before adding.
