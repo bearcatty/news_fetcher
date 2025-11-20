@@ -22,7 +22,7 @@ URL = "https://www.space.com/news"
 def fetch_article_content(url):
     """
     Fetches the full text content of an article from the given URL.
-    Returns a tuple (content, cover_image_url).
+    Returns a tuple (content, cover_image_url, error_message).
     """
     try:
         # Add a small delay to be polite
@@ -51,8 +51,8 @@ def fetch_article_content(url):
             if article:
                 paragraphs = article.find_all('p')
                 content = "\n\n".join([p.get_text(strip=True) for p in paragraphs])
-                return clean_article_content(content), cover_image
-            return "", cover_image
+                return clean_article_content(content), cover_image, None
+            return "", cover_image, "Could not find article body or fallback content"
             
         # Iterate through children to preserve order of text and images
         for child in article_body.children:
@@ -78,19 +78,38 @@ def fetch_article_content(url):
                         content_parts.append(f"\n![{alt}]({src})\n")
 
         content = "\n\n".join(content_parts)
-        return clean_article_content(content), cover_image
+        if not content:
+             return "", cover_image, "Extracted content is empty"
+             
+        return clean_article_content(content), cover_image, None
         
     except Exception as e:
         print(f"Error fetching content for {url}: {e}")
-        return "", ""
+        return "", "", str(e)
 
 
 def clean_article_content(content):
     """
     清理文章内容，移除广告和不相关的推荐内容
+    如果文章主要是营销内容，返回 None
     """
     if not content:
-        return content
+        return None
+    
+    # 1. Check for "Deal/Review" specific markers that indicate the WHOLE article is marketing
+    marketing_markers = [
+        "Price history:",
+        "Price comparison:",
+        "Reviews consensus:",
+        "✅ Buy it if:",
+        "❌ Don't buy it if:",
+        "Best Black Friday",
+        "streaming deal",
+    ]
+    
+    marker_count = sum(1 for m in marketing_markers if m in content)
+    if marker_count >= 2:
+        return None
     
     # 需要移除的广告/推广文本模式
     ad_patterns = [
@@ -105,6 +124,17 @@ def clean_article_content(content):
         "Read more:",
         "Editor's note:",
         "This article was updated",
+        "Check out our other guides",
+        "Featured in guides:",
+        "use a VPN",
+        "NordVPN",
+        "ExpressVPN",
+        "Save over",
+        "on sale right now",
+        "coupon",
+        "promo code",
+        "visit our",
+        "See our",
     ]
     
     # 分割成段落
@@ -129,8 +159,22 @@ def clean_article_content(content):
                 break
         
         # 过滤掉太短的段落（可能是标题或推广），但保留图片
-        if not is_ad and len(para) > 20:
-            cleaned_paragraphs.append(para)
+        # Additional heuristic: very short paragraphs that end with colon often indicate lists/links
+        if not is_ad and len(para) < 50 and para.endswith(':'):
+             # But be careful of "Note:"
+             if "Note:" not in para:
+                 is_ad = True
+
+        if not is_ad:
+            # Filter out "Buy it if" lines if they missed the global check
+            if "Buy it if:" in para or "Don't buy it if:" in para:
+                continue
+                
+            if len(para) > 20:
+                cleaned_paragraphs.append(para)
+    
+    if not cleaned_paragraphs:
+        return None
     
     return "\n\n".join(cleaned_paragraphs)
 
@@ -213,7 +257,25 @@ def fetch_and_translate_news(max_articles=10):
                 
                 # Fetch Full Content and Cover Image
                 print(f"📥 正在获取文章内容...")
-                content, cover_image = fetch_article_content(link)
+                content, cover_image, fetch_error = fetch_article_content(link)
+                
+                if fetch_error:
+                    print(f"❌ 获取内容失败: {fetch_error}")
+                    article_data = {
+                        'title': title,
+                        'author': author,
+                        'published_date': published_date,
+                        'synopsis': synopsis,
+                        'content': "",
+                        'cover_image': cover_image,
+                        'url': link,
+                        'fetched_at': datetime.now().isoformat(),
+                        'translation_error': f"Fetch Error: {fetch_error}"
+                    }
+                    db.save_article(article_data)
+                    articles_processed += 1
+                    continue
+
                 print(f"✓ 内容长度: {len(content)} 字符")
                 if cover_image:
                     print(f"✓ 找到封面图")
